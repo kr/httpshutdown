@@ -8,24 +8,18 @@ package httpshutdown
 TYPES
 
 type Server struct {
+    Server *http.Server
     // contains filtered or unexported fields
 }
     Serve wraps the net/http Server and performs graceful shutdown.
 
 
-func NewServer(s *http.Server, l net.Listener) *Server
+func (s *Server) Serve(l net.Listener) error
+    Serve calls Serve on the underlying http Server, but wraps l in another
+    net.Listener that synchronises open connections with Wait.
 
-
-func (s *Server) Serve() error
-    Serve calls Serve on the underlying http Server. As with package http,
-    Serve returns when the net.Listener in s returns an error, but Serve
-    also waits for all open connections to close if and only if Shutdown was
-    called.
-
-func (s *Server) Shutdown()
-    Shutdown performs a graceful shutdown of s. It calls Close on the
-    net.Listener in s. Any outstanding requests will complete normally; once
-    all open connections have closed, method Serve will return.
+func (s *Server) Wait()
+    Wait waits for all open connections in s to close.
 
 
 
