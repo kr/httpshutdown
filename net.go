@@ -33,22 +33,6 @@ type conn struct {
 	once sync.Once
 }
 
-func (c *conn) Read(p []byte) (n int, e error) {
-	n, e = c.Conn.Read(p)
-	if ne, ok := e.(net.Error); e != nil && !(ok && ne.Temporary()) {
-		c.once.Do(c.w.Done)
-	}
-	return
-}
-
-func (c *conn) Write(p []byte) (n int, e error) {
-	n, e = c.Conn.Write(p)
-	if ne, ok := e.(net.Error); e != nil && !(ok && ne.Temporary()) {
-		c.once.Do(c.w.Done)
-	}
-	return
-}
-
 func (c *conn) Close() error {
 	c.once.Do(c.w.Done)
 	return c.Conn.Close()
