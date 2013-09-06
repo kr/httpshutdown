@@ -15,9 +15,11 @@ type Server struct {
 	w sync.WaitGroup
 }
 
-// Serve calls Serve on the underlying http Server.
+// Serve calls Serve on the underlying http Server,
+// but wraps l in another net.Listener that synchronises
+// open connections with Wait.
 func (s *Server) Serve(l net.Listener) error {
-	return s.Server.Serve(&listener{Listener: l, w: &s.w})
+	return s.Server.Serve(&listener{l, &s.w})
 }
 
 // Wait waits for all open connections in s to close.
