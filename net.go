@@ -9,20 +9,16 @@ import (
 // all returned connections to be closed.
 type listener struct {
 	net.Listener
-	w sync.WaitGroup
+	w *sync.WaitGroup
 }
 
 func (l *listener) Accept() (c net.Conn, e error) {
 	c, e = l.Listener.Accept()
 	if e == nil {
 		l.w.Add(1)
-		c = &conn{Conn: c, w: &l.w}
+		c = &conn{Conn: c, w: l.w}
 	}
 	return
-}
-
-func (l *listener) wait() {
-	l.w.Wait()
 }
 
 // conn wraps a net.Conn and decrements the WaitGroup

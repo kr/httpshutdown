@@ -5,41 +5,22 @@ package httpshutdown
 import (
 	"net"
 	"net/http"
+	"sync"
 )
 
 // Serve wraps the net/http Server and performs graceful shutdown.
 type Server struct {
-	server   *http.Server
-	listener listener
-	stop     chan int
-}
+	Server *http.Server
 
-func NewServer(s *http.Server, l net.Listener) *Server {
-	return &Server{s, listener{Listener: l}, make(chan int, 1)}
+	w sync.WaitGroup
 }
 
 // Serve calls Serve on the underlying http Server.
-// As with package http, Serve returns when the net.Listener in s
-// returns an error, but Serve also waits for all open connections
-// to close if and only if Shutdown was called.
-func (s *Server) Serve() error {
-	err := s.server.Serve(&s.listener)
-	select {
-	case <-s.stop:
-		s.listener.wait()
-	}
-	return err
+func (s *Server) Serve(l net.Listener) error {
+	return s.Server.Serve(&listener{Listener: l, w: &s.w})
 }
 
-// Shutdown performs a graceful shutdown of s.
-// It calls Close on the net.Listener in s.
-// Any outstanding requests will complete normally;
-// once all open connections have closed, method Serve
-// will return.
-func (s *Server) Shutdown() {
-	select {
-	case s.stop <- 1:
-	default:
-	}
-	s.listener.Close()
+// Wait waits for all open connections in s to close.
+func (s *Server) Wait() {
+	s.w.Wait()
 }
