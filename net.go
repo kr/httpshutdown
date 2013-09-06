@@ -34,6 +34,6 @@ type conn struct {
 }
 
 func (c *conn) Close() error {
-	c.once.Do(c.w.Done)
+	defer c.once.Do(c.w.Done)
 	return c.Conn.Close()
 }
