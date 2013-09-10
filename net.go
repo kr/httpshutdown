@@ -12,13 +12,14 @@ type listener struct {
 	w *sync.WaitGroup
 }
 
-func (l *listener) Accept() (c net.Conn, e error) {
-	c, e = l.Listener.Accept()
-	if e == nil {
-		l.w.Add(1)
-		c = &conn{Conn: c, w: l.w}
+func (l *listener) Accept() (net.Conn, error) {
+	l.w.Add(1) // call Add before the event to be waited for (the connection)
+	c, err := l.Listener.Accept()
+	if err != nil {
+		l.w.Done()
+		return nil, err
 	}
-	return
+	return &conn{Conn: c, w: l.w}, nil
 }
 
 // conn wraps a net.Conn and decrements the WaitGroup
