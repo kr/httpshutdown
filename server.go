@@ -10,7 +10,7 @@ import (
 
 // Serve wraps the net/http Server and performs graceful shutdown.
 type Server struct {
-	Server *http.Server
+	Server http.Server
 
 	w sync.WaitGroup
 }
